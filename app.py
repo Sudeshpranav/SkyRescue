@@ -12,96 +12,38 @@ st.set_page_config(page_title="ArchMind AI Pro", page_icon="🌑", layout="wide"
 
 st.markdown("""
 <style>
-
 /* ===== GLOBAL ===== */
 html, body, [class*="css"] {
     color: #FFFFFF !important;
     font-family: 'Segoe UI', sans-serif;
 }
-
 /* Background */
-.stApp {
-    background-color: #0E1117;
-}
-
+.stApp { background-color: #0E1117; }
 /* Sidebar */
-section[data-testid="stSidebar"] {
-    background-color: #161B22;
-}
-
+section[data-testid="stSidebar"] { background-color: #161B22; }
 /* Headings */
-h1, h2, h3, h4 {
-    color: #FFFFFF !important;
-}
-
+h1, h2, h3, h4 { color: #FFFFFF !important; }
 /* Text */
-p, span, div, label {
-    color: #E6EDF3 !important;
-}
-
-/* Small text */
-small {
-    color: #9DA7B3 !important;
-}
-
-/* Inputs */
-label {
-    color: #FFFFFF !important;
-}
-
+p, span, div, label { color: #E6EDF3 !important; }
+small { color: #9DA7B3 !important; }
 /* Buttons */
 .stButton>button {
-    background-color: #00FFAA;
-    color: black;
-    font-weight: bold;
-    border-radius: 10px;
+    background-color: #00FFAA; color: black; font-weight: bold; border-radius: 10px;
 }
-.stButton>button:hover {
-    background-color: #00cc88;
-    color: white;
-}
-
-/* Metrics */
-div[data-testid="stMetricValue"] {
-    color: #00FFAA !important;
-}
-
-/* Cards */
+.stButton>button:hover { background-color: #00cc88; color: white; }
+/* Metrics & Cards */
+div[data-testid="stMetricValue"] { color: #00FFAA !important; }
 .res-card {
-    background-color: #1C2128;
-    padding: 20px;
-    border-radius: 15px;
-    border: 1px solid #30363D;
+    background-color: #1C2128; padding: 20px; border-radius: 15px; border: 1px solid #30363D;
 }
-
-/* Expander */
-.streamlit-expanderHeader {
-    color: #FFFFFF !important;
-}
-
-/* ===== FILE UPLOADER FIX ===== */
-[data-testid="stFileUploaderDropzone"] {
-    background-color: #1C2128 !important;
-    border: 2px dashed #30363D !important;
-}
-
-[data-testid="stFileUploaderDropzone"] * {
-    color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-
-[data-testid="stFileUploader"] button {
-    background-color: #00FFAA !important;
-    color: black !important;
-    font-weight: bold;
-}
-
 </style>
 """, unsafe_allow_html=True)
-# --- 2. LOAD AI BRAIN ---
+
+# --- 2. LOAD AI BRAIN (FIXED PATH!) ---
 @st.cache_resource
 def load_model():
-    path = '/content/drive/MyDrive/ArchMind_AI/archmind_model.pkl'
+    # It now looks for the file in the exact same folder as app.py on GitHub
+    path = 'archmind_model.pkl' 
     with open(path, 'rb') as f:
         return pickle.load(f)
 
@@ -112,15 +54,12 @@ with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3062/3062409.png", width=80)
     st.title("ArchMind Pro")
     st.markdown("---")
-
     selected_page = st.selectbox("Navigation", ["Material Prediction", "Project Analytics", "Settings"])
-
     st.markdown("### 🛠️ Configuration")
     depth = st.slider("Foundation Depth (ft)", 5.0, 15.0, 10.0)
     wall_thick_in = st.slider("Wall Thickness (in)", 4.0, 15.0, 9.0)
     soil = st.select_slider("Soil Stability", options=["Low", "Medium", "High"], value="Medium")
     soil_map = {"Low": 1.2, "Medium": 1.0, "High": 0.8}
-
     st.info("💡 Pro Tip: Use High Stability soil to reduce cement requirements by 20%.")
 
 # --- 4. MAIN INTERFACE ---
@@ -146,52 +85,49 @@ if selected_page == "Material Prediction":
         calc_area = int(mesh.extents[0] * mesh.extents[1])
         calc_floors = max(1, int(mesh.extents[2] / 10.0))
 
-        # Display Stats in a nice grid
+        # Display Stats
         stat1, stat2, stat3, stat4 = st.columns(4)
         stat1.metric("Footprint", f"{calc_area} sqft")
         stat2.metric("Levels", f"{calc_floors} Floors")
         stat3.metric("Volume", f"{int(mesh.volume/1000)}k units")
         stat4.metric("Slicing", "Success ✅")
 
+        # FIXED COLUMN NAMES TO MATCH THE AI BRAIN!
         input_data = pd.DataFrame({
-            'area_sqft': [calc_area], 'num_floors': [calc_floors], 'foundation_depth_ft': [depth],
-            'wall_thickness_in': [wall_thick_in], 'soil_type_score': [soil_map[soil]]
+            'Area': [calc_area], 
+            'Floors': [calc_floors], 
+            'Foundation_Depth': [depth],
+            'Wall_Thickness': [wall_thick_in], 
+            'Soil_Type': [soil_map[soil]]
         })
 
         if st.button("RUN AI ESTIMATOR", use_container_width=True, type="primary"):
-            # Predictions
             preds = model.predict(input_data)[0]
-
-            # Masonry Calc (8% Wastage Logic)
+            
+            # Masonry Calc
             est_wall_length = math.sqrt(calc_area) * 6 * calc_floors
             vol_cuft = est_wall_length * 10 * (wall_thick_in/12)
             bricks = int((vol_cuft / 0.0625) * 1.08)
             aac = int((vol_cuft / 0.88) * 1.05)
 
             st.markdown("### 📊 Resource Allocation Results")
-
-            # Structural Cards
             c1, c2 = st.columns(2)
             with c1:
                 st.markdown(f"""<div class="res-card">
-                    <h4>Cement (Structural)</h4>
-                    <h2 style="color:#00FFAA;">{int(preds[0])} Bags</h2>
+                    <h4>Cement (Structural)</h4><h2 style="color:#00FFAA;">{int(preds[0])} Bags</h2>
                     <small>Based on standard grade M25 mix</small>
                 </div>""", unsafe_allow_html=True)
             with c2:
                 st.markdown(f"""<div class="res-card">
-                    <h4>Steel Rebar</h4>
-                    <h2 style="color:#00FFAA;">{preds[1]:.2f} Tonnes</h2>
+                    <h4>Steel Rebar</h4><h2 style="color:#00FFAA;">{preds[1]:.2f} Tonnes</h2>
                     <small>High-strength TMT Grade Fe500D</small>
                 </div>""", unsafe_allow_html=True)
 
-            # Masonry Tabs
             st.markdown("### 🧱 Wall Components")
             m1, m2 = st.columns(2)
             m1.info(f"**Fly Ash Bricks:** {bricks:,} units")
             m2.info(f"**AAC Blocks:** {aac:,} units")
 
-            # XAI Widget
             with st.expander("Show Neural Network Logic (SHAP Explainer)"):
                 explainer = shap.TreeExplainer(model.estimators_[0])
                 shap_values = explainer.shap_values(input_data)
