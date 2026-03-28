@@ -92,13 +92,13 @@ if selected_page == "Material Prediction":
         stat3.metric("Volume", f"{int(mesh.volume/1000)}k units")
         stat4.metric("Slicing", "Success ✅")
 
-        # FIXED COLUMN NAMES TO MATCH THE AI BRAIN!
+        # THE REAL FIX: Reverting to the lowercase names that the AI was ACTUALLY trained on!
         input_data = pd.DataFrame({
-            'Area': [calc_area], 
-            'Floors': [calc_floors], 
-            'Foundation_Depth': [depth],
-            'Wall_Thickness': [wall_thick_in], 
-            'Soil_Type': [soil_map[soil]]
+            'area_sqft': [calc_area], 
+            'num_floors': [calc_floors], 
+            'foundation_depth_ft': [depth],
+            'wall_thickness_in': [wall_thick_in], 
+            'soil_type_score': [soil_map[soil]]
         })
 
         if st.button("RUN AI ESTIMATOR", use_container_width=True, type="primary"):
